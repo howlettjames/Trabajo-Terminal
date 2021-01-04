@@ -8,7 +8,7 @@
 
 #ifndef PDI_H
 #define PDI_H
- 
+
 void RGBToGray(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t width, uint32_t height);
 void ajusteBrilloImagen(unsigned char * imagenGray, uint32_t width, uint32_t height, int desplazamiento);
 void GrayToRGB(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t width, uint32_t height);

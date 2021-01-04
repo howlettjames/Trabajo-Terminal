@@ -10,7 +10,7 @@
 
 #include "mongoose.h"
 
-static const char *s_listen_on = "https://localhost:8000";          // Dirección IP y puerto en el que correrá el servidor.
+static const char *s_listen_on = "http://localhost:8000";          // Dirección IP y puerto en el que correrá el servidor.
 static const char *s_web_directory = ".";                           // Directorio dode se encuentran los recursos a ser servidos.
 
 /**
@@ -34,7 +34,7 @@ static const char *s_web_directory = ".";                           // Directori
  *            a la aplicación. En este caso no la necesitamos.
 */
 void requests_handler(struct mg_connection *connection, int event, void *event_data, void *func_data) 
-{ 
+{
     // CHECAMOS SI EL EVENTO QUE HA OCURRIDO ES UNA PETICIÓN HTTP
 	if(event == MG_EV_HTTP_MSG) 
 	{

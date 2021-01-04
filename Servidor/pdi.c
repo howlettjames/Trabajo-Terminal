@@ -94,7 +94,7 @@ void *edgeDetection(void *nh)
  *      height : uint32_t
  *          - Altura de la imagen RGB
 */
-void smoothGauss(unsigned char *imagenGray, unsigned char *imagenGauss, uint32_t width, uint32_t height)
+void smoothGauss(unsigned char *imagenGray, unsigned char *imagenGauss, uint32_t _width, uint32_t _height)
 {
     register int x, y, xm, ym;
 	int indicem, indicei, conv;
@@ -102,20 +102,20 @@ void smoothGauss(unsigned char *imagenGray, unsigned char *imagenGauss, uint32_t
                                             2, 4, 2,
                                             1, 2, 1 };
 	
-    memset(imagenGauss, 255, width * height);   // Limpiamos la estructura
-    for (y = 0; y <= (height - GAUSS_MASK); y++)
-		for (x = 0; x <= (width - GAUSS_MASK); x++)
+    memset(imagenGauss, 255, _width * _height);   // Limpiamos la estructura
+    for (y = 0; y <= (_height - GAUSS_MASK); y++)
+		for (x = 0; x <= (_width - GAUSS_MASK); x++)
 		{
 			indicem = 0;
 			conv = 0;
 			for (ym = 0; ym < GAUSS_MASK; ym++)
 				for (xm = 0; xm < GAUSS_MASK; xm++)
 				{
-					indicei = (y + ym) * width + (x + xm);
+					indicei = (y + ym) * _width + (x + xm);
 					conv += imagenGray[indicei] * mascara[indicem++];
 				}
 			conv >>= 4; // conv = conv / 16
-			indicei = (y + 1) * width + (x + 1);
+			indicei = (y + 1) * _width + (x + 1);
 			imagenGauss[indicei] = conv;
 		}
 }
@@ -136,12 +136,12 @@ void smoothGauss(unsigned char *imagenGray, unsigned char *imagenGauss, uint32_t
  *      height : uint32_t
  *          - Altura de la imagen RGB
 */
-void RGBToGray(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t width, uint32_t height)
+void RGBToGray(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t _width, uint32_t _height)
 {
     unsigned char nivelGris;
     register int indiceGray, indiceRGB;
 
-    for (indiceGray = 0, indiceRGB = 0; indiceGray < (width * height); indiceGray++, indiceRGB += 3)
+    for (indiceGray = 0, indiceRGB = 0; indiceGray < (_width * _height); indiceGray++, indiceRGB += 3)
     {
         nivelGris = ((21 * imagenRGB[indiceRGB]) + (72 * imagenRGB[indiceRGB + 1]) + (7 * imagenRGB[indiceRGB + 2])) / 100;
         imagenGray[indiceGray] = nivelGris;
@@ -164,14 +164,14 @@ void RGBToGray(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t wid
  *      desplazamiento : unsigned char
  *          - Es el valor de desplazamiento del histograma, el cual va de 0 a 255
 */
-void ajusteBrilloImagen(unsigned char * imagenGray, uint32_t width, uint32_t height, int desplazamiento)
+void ajusteBrilloImagen(unsigned char * imagenGray, uint32_t _width, uint32_t _height, int desplazamiento)
 {
     register int indiceGray;
     int pixel;
 
     if (desplazamiento > 0) 
     {
-        for (indiceGray = 0; indiceGray < (width * height); indiceGray++)
+        for (indiceGray = 0; indiceGray < (_width * _height); indiceGray++)
         {
             pixel = imagenGray[indiceGray] + desplazamiento;
             imagenGray[indiceGray] = (pixel > 255) ? 255 : (unsigned char)pixel;
@@ -179,7 +179,7 @@ void ajusteBrilloImagen(unsigned char * imagenGray, uint32_t width, uint32_t hei
     }
     else
     {
-        for (indiceGray = 0; indiceGray < (width * height); indiceGray++)
+        for (indiceGray = 0; indiceGray < (_width * _height); indiceGray++)
         {
             pixel = imagenGray[indiceGray] + desplazamiento;
             imagenGray[indiceGray] = (pixel < 0) ? 0 : (unsigned char)pixel;
@@ -202,11 +202,11 @@ void ajusteBrilloImagen(unsigned char * imagenGray, uint32_t width, uint32_t hei
  *      height : uint32_t
  *          - Altura de la imagen RGB
 */
-void GrayToRGB(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t width, uint32_t height)
+void GrayToRGB(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t _width, uint32_t _height)
 {
     register int indiceGray, indiceRGB;
 
-    for (indiceGray = 0, indiceRGB = 0; indiceGray < (width * height); indiceGray++, indiceRGB += 3)
+    for (indiceGray = 0, indiceRGB = 0; indiceGray < (_width * _height); indiceGray++, indiceRGB += 3)
     {
         imagenRGB[indiceRGB] = imagenGray[indiceGray];      // Componente R
         imagenRGB[indiceRGB + 1] = imagenGray[indiceGray];  // Componente G
@@ -226,16 +226,15 @@ void GrayToRGB(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t wid
  *      imagen : unsigned char *
  *          - Representación de la imagen
 */
-unsigned char * reservarMemoria(uint32_t width, uint32_t height)
+unsigned char * reservarMemoria(uint32_t _width, uint32_t _height)
 {
     unsigned char *imagen;
-
-	imagen = (unsigned char *)malloc(width * height * sizeof(unsigned char));
-	if(!imagen)
-	{
-		perror("Error al asignar memoria a la imagen");
-		exit(EXIT_FAILURE);
-	}
-
-	return imagen;
+    imagen = (unsigned char *)malloc(_width * _height * sizeof(unsigned char));
+    
+    if(!imagen)
+    {
+	    perror("Error al asignar memoria a la imagen");
+	    exit(EXIT_FAILURE);
+    }
+    return imagen;
 }

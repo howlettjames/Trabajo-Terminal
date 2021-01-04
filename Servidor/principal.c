@@ -37,30 +37,35 @@ int main(int argc, char const *argv[])
 	{
 		// TOMANDO LA CAPTURA CON LA CÁMARA DE LA RASP, DICHA IMAGEN SE TOMA EN UNA RESOLUCIÓN DE 640x480
 		// Y SE GUARDA EN FORMATO BMP.
-		// if(system("raspistill -n -t 500 -e bmp -w 640 -h 480 -o foto.bmp") == -1)
-		// {
-		// 	perror("Ocurrio algun problema al tomar la captura");
-		// 	exit(1);	
-		// }
+		if(system("raspistill -n -t 500 -e bmp -w 640 -h 480 -o foto.bmp") == -1)
+		{
+		 	perror("Ocurrio algun problema al tomar la captura");
+		 	exit(1);	
+		}
 		
 		// ABRIENDO LA IMAGEN RECIEN CAPTURADA
-		imagenRGB = openImage();
-		//displayInfoBMP(&info_imagen); 
-
-		// RESERVANDO MEMORIA PARA LOS ARREGLOS QUE SE UTILIZAN POSTERIORMENTE (CUANDO SE USE RASP CON CÁMARA HACER ESTE PASO SOLO UNA VEZ)
-		imagenGray = reservarMemoria(info_imagen.width, info_imagen.height);
-		imagenGauss = reservarMemoria(info_imagen.width, info_imagen.height);
-		imagenSobel = reservarMemoria(info_imagen.width, info_imagen.height);
+		//imagenRGB = openImage();
+		imagenRGB = openBMP("foto.bmp", &info_imagen);
+		//displayInfoBMP(&info_imagen);
 		
-		// TRANSFORMANDO LA IMAGEN A ESCALA DE GRISES
-		RGBToGray(imagenRGB, imagenGray, info_imagen.width, info_imagen.height); 
-
+		// RESERVANDO MEMORIA PARA LOS ARREGLOS QUE SE UTILIZAN POSTERIORMENTE (CUANDO SE USE RASP CON CÁMARA HACER ESTE PASO SOLO UNA VEZ)
+		imagenGray = reservarMemoria(WIDTH_IMG, HEIGHT_IMG);
+		imagenGauss = reservarMemoria(WIDTH_IMG, HEIGHT_IMG);
+		imagenSobel = reservarMemoria(WIDTH_IMG, HEIGHT_IMG);
+	
+		// TRANSFORMANDO LA IMAGEN A ESCALA DE GRISES		
+		RGBToGray(imagenRGB, imagenGray, WIDTH_IMG, HEIGHT_IMG); 
+		GrayToRGB(imagenRGB, imagenGray, WIDTH_IMG, HEIGHT_IMG);	
+		saveBMP("gray.bmp", &info_imagen, imagenRGB);
+		
 		// APLICANDO GAUSS
 		smoothGauss(imagenGray, imagenGauss, info_imagen.width, info_imagen.height);
+		GrayToRGB(imagenRGB, imagenGauss, WIDTH_IMG, HEIGHT_IMG);	
+		saveBMP("smooth.bmp", &info_imagen, imagenRGB);
 
 		// APLICANDO SOBEL
 		applyEdgeDetection();
-		
+
 		// GUARDANDO LA IMAGEN. PARA GUARDAR UNA IMAGEN SE NECESITA REGRESAR A FORMATO RGB.
 		GrayToRGB(imagenRGB, imagenSobel, info_imagen.width, info_imagen.height);	
 		saveBMP("images/sobel.bmp", &info_imagen, imagenRGB);
@@ -69,7 +74,9 @@ int main(int argc, char const *argv[])
 		free(imagenGray);
 		free(imagenSobel);
 		free(imagenGauss);
-		sleep(2);
+		printf("Nueva toma de foto");
+		sleep(3);
+		
 	}
 
 	printf("Concluimos la ejecución de la aplicacion Servidor\n");
