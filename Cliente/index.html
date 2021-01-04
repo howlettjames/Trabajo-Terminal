@@ -57,7 +57,7 @@
                 console.log("OK");
                 let img_bytes = new Uint8Array(this.response);
                 console.log("OK1");
-                //let decoder = new TextDecoder();
+                let decoder = new TextDecoder();
                 let img_base64 = bytesToBase64(img_bytes);
                 console.log("OK2");
                 // console.log(image_base64);
