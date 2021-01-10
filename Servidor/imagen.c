@@ -53,9 +53,11 @@ unsigned char *openBMP(char *filename, bmpInfoHeader *bInfoHeader)
   	// Leemos la cabecera de información completa
   	fread(bInfoHeader, sizeof(bmpInfoHeader), 1, f);
 
+	// Asignamos el tamaño de la imagen manualmente, dado que el comando raspistill no lo hace.
+	bInfoHeader->imgsize = IMG_SIZE;
+
   	// Reservamos memoria para la imagen, ¿cuánta? Tanto como indique imgsize 
-  	//imgdata = (unsigned char *) malloc(bInfoHeader->imgsize);
-	imgdata = (unsigned char *) malloc(IMG_SIZE);
+  	imgdata = (unsigned char *) malloc(bInfoHeader->imgsize);
 	if(imgdata == NULL)
 	{
 		perror("Error al asignar memoria");
@@ -66,7 +68,7 @@ unsigned char *openBMP(char *filename, bmpInfoHeader *bInfoHeader)
   	fseek(f, header.offset, SEEK_SET);
   	
 	// Leemos los datos de imagen, tantos bytes como imgsize 
-  	fread(imgdata, IMG_SIZE, 1, f);
+  	fread(imgdata, bInfoHeader->imgsize, 1, f);
   	fclose(f);
 
   	return imgdata;
@@ -107,7 +109,7 @@ void saveBMP(char *filename, bmpInfoHeader *info, unsigned char *imgdata)
     type = 0x4D42;
     
     // A continuación llenar el campo size, el cual es el tamaño total del archivo i.e. headers y tamaño de la imagen en sí.
-  	header.size = IMG_SIZE + sizeof(bmpFileHeader) + sizeof(bmpInfoHeader);
+  	header.size = info->imgsize + sizeof(bmpFileHeader) + sizeof(bmpInfoHeader);
 
     //  Bytes reservados, no hace falta llenarlos.
   	// header.resv1=0; 
@@ -123,7 +125,7 @@ void saveBMP(char *filename, bmpInfoHeader *info, unsigned char *imgdata)
   	// Escribimos la información básica de la imagen 
   	fwrite(info, sizeof(bmpInfoHeader), 1, f);
   	// Escribimos la imagen en sí
-  	fwrite(imgdata, IMG_SIZE, 1, f);
+  	fwrite(imgdata, info->imgsize, 1, f);
 
   	fclose(f);
 }
@@ -145,7 +147,7 @@ void displayInfoBMP(bmpInfoHeader *info)
   	printf("Planos (1): %d\n", info->planes);
   	printf("Bits por pixel: %d\n", info->bpp);
   	printf("Compresión: %d\n", info->compress);
-  	printf("Tamaño de datos de imagen: %u\n", IMG_SIZE);
+  	printf("Tamaño de datos de imagen: %u\n", info->imgsize);
   	printf("Resolucón horizontal: %u\n", info->bpmx);
   	printf("Resolucón vertical: %u\n", info->bpmy);
   	printf("Colores en paleta: %d\n", info->colors);

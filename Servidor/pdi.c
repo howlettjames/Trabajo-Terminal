@@ -14,7 +14,6 @@
 #include "pdi.h"
 #include "defs.h"
 
-extern uint32_t width, height; 							// Variables globales para que los hilos conozcan las dimensiones de la imagen
 extern unsigned char *imagenGauss, *imagenSobel;		// Variables globales en donde los hilos guardarán el resultado de sus operaciones
 
 /**
@@ -39,10 +38,10 @@ void *edgeDetection(void *nh)
 {
 	// CALCULANDO EL BLOQUE QUE LE TOCA PROCESAR A ESTE HILO
 	int core = *(int *)nh;
-	int elemsBloque = (width * height) / NUM_THREADS;
+	int elemsBloque = (IMG_WIDTH * IMG_HEIGHT) / NUM_THREADS;
 	int inicioBloque = (core * elemsBloque);
-	int finBloque = (inicioBloque + elemsBloque) / width;
-	inicioBloque = inicioBloque / width;	
+	int finBloque = (inicioBloque + elemsBloque) / IMG_WIDTH;
+	inicioBloque = inicioBloque / IMG_WIDTH;	
 
 	// VARIABLES PARA TRABAJAR CON SOBEL
 	register int x, y, xb, yb;								// Índices e índices offset (b)
@@ -55,14 +54,14 @@ void *edgeDetection(void *nh)
 
 	// RECORREMOS LA IMAGEN Y APLICAMOS SOBEL DE ACUERDO AL BLOQUE QUE LE TOCÓ A ESTE HILO
 	for(y = inicioBloque; y < finBloque; y++)
-		for(x = 0; x < width - SOBEL_MASK; x++)
+		for(x = 0; x < IMG_WIDTH - SOBEL_MASK; x++)
 		{
 			// HACEMOS LA CONVOLUCION DEL FILTRO CON LA IMAGEN
 			resultado = 0;
 			for (yb = 0; yb < SOBEL_MASK; yb++)
 				for (xb = 0; xb < SOBEL_MASK; xb++)
 				{
-					indice = (y + yb) * width + (x + xb);
+					indice = (y + yb) * IMG_WIDTH + (x + xb);
 					convolucion1 += gradiente_fila[yb * SOBEL_MASK + xb] * imagenGauss[indice];
 					convolucion2 += gradiente_col[yb * SOBEL_MASK + xb] * imagenGauss[indice];
 				}
@@ -73,7 +72,7 @@ void *edgeDetection(void *nh)
 			resultado = (int) sqrt(convolucion1 * convolucion1 + convolucion2 * convolucion2);
 
 			// SE CALCULA EL ÍNDICE EN EL CUAL SE VA A GUARDAR EL RESULTADO Y SE GUARDA.
-			indice = (y + (SOBEL_MASK >> 1)) * width + (x + (SOBEL_MASK >> 1));
+			indice = (y + (SOBEL_MASK >> 1)) * IMG_WIDTH + (x + (SOBEL_MASK >> 1));
 			imagenSobel[indice] = resultado;
 		}
 

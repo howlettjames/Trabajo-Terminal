@@ -9,10 +9,10 @@
 #define GAUSS_MASK      3       // Dimensión del filtro(matriz) de Gauss, en este caso de 3x3
 #define SOBEL_MASK      3       // Dimensión del filtro(matriz) de Sobel, en este caso de 3x3
 #define NUM_THREADS     4  		// Número de hilos para procesar la imagen cuando se aplica Sobel
-#define WIDTH_IMG		640
-#define HEIGHT_IMG		480
-#define CHANNELS_IMG	3
-#define IMG_SIZE	    WIDTH_IMG*HEIGHT_IMG*CHANNELS_IMG	// Tamaño de la imagen
+#define IMG_WIDTH		640
+#define IMG_HEIGHT		480
+#define IMG_CHANNELS	3
+#define IMG_SIZE	    IMG_WIDTH * IMG_HEIGHT * IMG_CHANNELS	// Tamaño de la imagen
 
 
 #endif
