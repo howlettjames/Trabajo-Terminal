@@ -4,12 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <button id="requestbutton">Request Image</button>
-    <br>
-    <img src="" id="sobelimage" alt="Sobel Image" >
+    <header>
+        <div class="container">
+            <div id="branding">    
+                <h1>Live monitoring</h1>
+            </div>
+        </div>
+    </header>
+
+        <img src="" id="sobelimage" alt="Sobel Image">
     
+    <footer>
+        <p>Self Driving Car using Hough Transform</p>
+    </footer>
 <script>   
     //document.getElementById("requestbutton").addEventListener('click', requestImage);
     setInterval(requestImage, 2000);
@@ -47,25 +57,22 @@
     function requestImage() 
     {
         let xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://localhost:8000/images/sobel', true);
+
+        xhr.open('GET', 'http://192.168.100.213:80/images/sobel.bmp', true);
         xhr.responseType = "arraybuffer";
         
         xhr.onload = function()
         {
             if(this.status == 200)
             {
-                console.log("OK");
                 let img_bytes = new Uint8Array(this.response);
-                console.log("OK1");
                 let decoder = new TextDecoder();
                 let img_base64 = bytesToBase64(img_bytes);
-                console.log("OK2");
-                // console.log(image_base64);
                 document.getElementById("sobelimage").src = "data:image/bmp;base64," + img_base64;
                 console.log(document.getElementById("sobelimage"));
             }
         }
-
+        /*
         xhr.addEventListener("progress", function(event) {
 
             if(event.lengthComputable) {
@@ -75,7 +82,7 @@
             }
 
         });
-
+        */
         xhr.onerror = function()
         {
             console.log("Request Error...");

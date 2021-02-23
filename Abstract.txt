@@ -1,0 +1,10 @@
+4ta versión
+
+Esta versión ya no ocupa Mongoose como servidor web, pues al probarlo en la rasp el servidor no se instanciaba en la
+IP establecida i.e. 192.168.100.16 sino en una random, me dí cuenta de esto al correr el comando: netstat -tlpn y
+ver que aunque el servidor si escuchaba en el puerto indicado, no lo hacía en la IP indicada, por lo tanto negaba las
+conexiones incluso desde localhost. Por lo tanto, decidí mover el servidor web a Apache, de esta forma ya no se nece-
+sitaron los archivos de mongoose ni la parte que había programado para el servidor we (web_server.c y .h).
+
+Sin embargo, una cosa importante se tuvo que configurar en Apache y fue el CORS, colocando la directiva Header
+ser Control-Access-Allow-Origin.

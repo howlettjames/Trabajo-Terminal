@@ -63,7 +63,7 @@ int main(int argc, char const *argv[])
 		saveBMP("images/sobel.bmp", &info_imagen, imagenRGB);
 	
 		free(imagenRGB);
-		//sleep(1);	
+		sleep(2);	
 	}
 
 	free(imagenGray);
