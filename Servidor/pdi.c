@@ -16,6 +16,74 @@
 
 extern unsigned char *imagenGauss, *imagenSobel;		// Variables globales en donde los hilos guardarán el resultado de sus operaciones
 
+
+/**
+ * @name: sumar
+ * @desc: Aplica la union entre la imagen segmentada y la imagen Sobel con contornos detectados
+ * @parameters:
+ *      imagenSobel : unsigned char *
+ *          - Es la imagen con los contornos detectados
+ *		  imagenSegmentada : unsigned char *
+ *          - Es la imagen segmentada
+ *      width : uint32_t
+ *          - Ancho de la imagen RGB
+ *      height : uint32_t
+ *          - Altura de la imagen RGB
+ *      threshold : int
+ *          - Es el umbral a considerar para aplicar la segmentacion
+*/
+void sumar(unsigned char *imagenSobel, unsigned char *imagenSegmentada, unsigned char *imagenUnion, uint32_t _width, uint32_t _height)
+{
+    register int indice;
+    
+    memset(imagenUnion, 255, _width * _height);   // Limpiamos la estructura
+    
+    for (indice = 0; indice < (_width * _height); indice++) {
+    		imagenUnion[indice] = (~imagenSobel[indice]) & (imagenSegmentada[indice]);
+    		//if (imagenUnion[indice] == 0) {imagenUnion[indice] = 255;}
+    		//else {imagenUnion[indice] = 0;}		    
+    }   
+}
+
+/**
+ * @name: segmentar
+ * @desc: Aplica una segmentacion utilizando un limite de umbralizacion
+ * @parameters:
+ *      imagenGray : unsigned char *
+ *          - Es la imagen en escala de grises
+ *		  imagenSegmentada : unsigned char *
+ *          - Es la imagen segmentada
+ *      width : uint32_t
+ *          - Ancho de la imagen RGB
+ *      height : uint32_t
+ *          - Altura de la imagen RGB
+ *      threshold : int
+ *          - Es el umbral a considerar para aplicar la segmentacion
+*/
+void segmentar(unsigned char *imagenGray, unsigned char *imagenSegmentada, uint32_t _width, uint32_t _height, int threshold)
+{
+    register int indiceGray;
+    
+    memset(imagenSegmentada, 255, _width * _height);   // Limpiamos la estructura
+    
+    if (threshold > 45)
+    {
+        for (indiceGray = 0; indiceGray < (_width * _height); indiceGray++)
+        {
+				if (imagenGray[indiceGray] < threshold) { imagenSegmentada[indiceGray] = 0; }
+				else { imagenSegmentada[indiceGray] = 255; }                 
+        }
+    }
+    else
+    {
+        for (indiceGray = 0; indiceGray < (_width * _height); indiceGray++)
+        {
+				if (imagenGray[indiceGray] < 127) { imagenSegmentada[indiceGray] = 0; }
+				else { imagenSegmentada[indiceGray] = 255; }                 
+        }
+    }
+}
+
 /**
  * @name: edgeDetection
  * @desc: Aplica un filtro para detección de bordes utilizando el operador 
@@ -96,10 +164,21 @@ void *edgeDetection(void *nh)
 void smoothGauss(unsigned char *imagenGray, unsigned char *imagenGauss, uint32_t _width, uint32_t _height)
 {
     register int x, y, xm, ym;
-	int indicem, indicei, conv;
-	int mascara[GAUSS_MASK*GAUSS_MASK] = {  1, 2, 1,
-                                            2, 4, 2,
-                                            1, 2, 1 };
+    int indicem, indicei, conv;
+		
+		int mascara[GAUSS_MASK*GAUSS_MASK] = {  1, 2, 1,
+                                              2, 4, 2,
+                                              1, 2, 1 };
+                                            
+		/*int mascara[GAUSS_MASK*GAUSS_MASK] = {  1,  4, 1,
+                                              4, 12, 4,
+                                              1,  4, 1 };*/
+                                              
+		/*int mascara[GAUSS_MASK*GAUSS_MASK] = {  1,  4,  6,  4, 1,
+							4, 16, 24, 16, 4,
+							6, 24, 36, 24, 6,
+							4, 16, 24, 16, 4, 
+							1,  4,  6,  4, 1 };*/                          
 	
     memset(imagenGauss, 255, _width * _height);   // Limpiamos la estructura
     for (y = 0; y <= (_height - GAUSS_MASK); y++)
@@ -113,7 +192,9 @@ void smoothGauss(unsigned char *imagenGray, unsigned char *imagenGauss, uint32_t
 					indicei = (y + ym) * _width + (x + xm);
 					conv += imagenGray[indicei] * mascara[indicem++];
 				}
-			conv >>= 4; // conv = conv / 16
+			conv >>= 4; // conv = conv / 16	G3
+			//conv >>= 5; // conv = conv / 32		Debil
+			//conv /= 246;				G5
 			indicei = (y + 1) * _width + (x + 1);
 			imagenGauss[indicei] = conv;
 		}
@@ -139,12 +220,13 @@ void RGBToGray(unsigned char *imagenRGB, unsigned char *imagenGray, uint32_t _wi
 {
     unsigned char nivelGris;
     register int indiceGray, indiceRGB;
-
+	 
     for (indiceGray = 0, indiceRGB = 0; indiceGray < (_width * _height); indiceGray++, indiceRGB += 3)
     {
         nivelGris = ((21 * imagenRGB[indiceRGB]) + (72 * imagenRGB[indiceRGB + 1]) + (7 * imagenRGB[indiceRGB + 2])) / 100;
         imagenGray[indiceGray] = nivelGris;
     }
+    
 }
 
 /**
