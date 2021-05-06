@@ -18,6 +18,7 @@
 
 unsigned char *imagenRGB, *imagenGray;				// Almacenarán la imagen en formato RGB y en escala de grises respectivamente
 unsigned char *imagenGauss, *imagenSobel;			// Almacenarán la imagen después de haberle aplicado Gauss y Sobel respectivamente
+unsigned char *imagenSegmentada, *imagenUnion;	// Almacenarán la imagen en escala de grises segmentada y su union con Sobel respectivamente
 bmpInfoHeader info_imagen;							// Estructura de datos que contendrá la información de la imagen
 int num_sample = 0;									// Contador del número de imagen muestra a tomar							
 
@@ -25,10 +26,15 @@ void applyEdgeDetection();
 
 int main(int argc, char const *argv[])
 {
+
+	printf("Servidor corriendo...");	
+	
 	// RESERVANDO MEMORIA PARA LOS ARREGLOS QUE SE UTILIZAN POSTERIORMENTE (CUANDO SE USE RASP CON CÁMARA HACER ESTE PASO SOLO UNA VEZ)
 	imagenGray = reservarMemoria(IMG_WIDTH, IMG_HEIGHT);
 	imagenGauss = reservarMemoria(IMG_WIDTH, IMG_HEIGHT);
 	imagenSobel = reservarMemoria(IMG_WIDTH, IMG_HEIGHT);
+	imagenSegmentada = reservarMemoria(IMG_WIDTH, IMG_HEIGHT);
+	imagenUnion = reservarMemoria(IMG_WIDTH, IMG_HEIGHT);
 
 	// EJECUTAMOS EL ALGORITMO DE NAVEGACIÓN INDEFINIDAMENTE
 	while(1)
@@ -61,14 +67,29 @@ int main(int argc, char const *argv[])
 		// GUARDANDO LA IMAGEN. PARA GUARDAR UNA IMAGEN SE NECESITA REGRESAR A FORMATO RGB.
 		GrayToRGB(imagenRGB, imagenSobel, info_imagen.width, info_imagen.height);	
 		saveBMP("images/sobel.bmp", &info_imagen, imagenRGB);
-	
+		
+		// APLICANDO SEGMENTACION
+		segmentar(imagenGray, imagenSegmentada, info_imagen.width, info_imagen.height, 127);
+		GrayToRGB(imagenRGB, imagenSegmentada, info_imagen.width, info_imagen.height);
+		saveBMP("images/segmentada.bmp", &info_imagen, imagenRGB);
+		sleep(1);
+		saveBMP("images/segmentada_nav.bmp", &info_imagen, imagenRGB);		
+		
+		// UNIR CONTORNOS CON SEGMENTACION
+		sumar(imagenSobel, imagenSegmentada, imagenUnion, info_imagen.width, info_imagen.height);
+		GrayToRGB(imagenRGB, imagenUnion, info_imagen.width, info_imagen.height);
+		saveBMP("images/union.bmp", &info_imagen, imagenRGB);	
+		
 		free(imagenRGB);
-		sleep(2);	
+		sleep(1);
+		//system("python3 navigate.py");
 	}
 
 	free(imagenGray);
 	free(imagenSobel);
 	free(imagenGauss);
+	free(imagenSegmentada);
+	free(imagenUnion);
 	printf("Concluimos la ejecución de la aplicacion Servidor\n");
 	
 	return 0;
