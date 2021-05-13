@@ -1,103 +1,84 @@
-import Keypress as kp
-import Camara
-from Motor import Motor
-from Navegacion import obtenerCarril
+from MotorModule import Motor
+import CameraModule
+from LaneDetectionModule import getLaneCurve
 import cv2
-from time import sleep
 
 ####################################
-motor = Motor(18,23,24,17,27,22)
-velocidad = 0.72
-tiempo = 0.14
-####################################
-
+motor = Motor(2, 3, 4, 17, 22, 27)
 imgCounter = 0
+firstTime = 1
+####################################
 
-
-#kp.init()
-
-def guardarImg(image, leyenda, counter):      
-    # font
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    
-    # org
-    org = (50, 50)
-    
-    # fontScale
-    fontScale = 1
-    
-    # Blue color in BGR
-    color = (255, 0, 0)
-      
-    # Line thickness of 2 px
-    thickness = 2
-        
-    # Using cv2.putText() method
-    image = cv2.putText(image, leyenda, org, font, 
-                       fontScale, color, thickness, cv2.LINE_AA)
-    
-    name_img = "images/Image" + str(counter) + ".png"
-    
-    cv2.imwrite(name_img, image)
-    
-def main(isCarroGrande = False):
-    
+def main():
     global imgCounter
+    global firstTime 
     
-    img = Camara.getImage(display = True)
-    curveVal = obtenerCarril(img, 2)
+    ########################## PDI
+    img = CameraModule.getImage()
+    curveVal, imgResult = getLaneCurve(img, 1)
+    # imgResult = cv2.resize(imgResult, (1920, 1440))
+    print(f"Curve: {curveVal}")
     
-    sen = 1.3
-    maxVal = 0.3
-    
-    prevCurve = curveVal
-    
-    if (curveVal > maxVal): curveVal = maxVal
-    if (curveVal < -maxVal):    curveVal = -maxVal
-    
-    if curveVal > 0:
-        sen = 1.5
-        if (curveVal < 0.10):   curveVal = 0
+    ######################### IMG WRITING
+    cv2.imwrite(f'images/result{imgCounter}.jpg', imgResult)
+    #cv2.imwrite(f'/var/www/html/images/warp{imgCounter}.jpg', imgWarp)
+
+    if(firstTime > 0):
+        cv2.imwrite(f'images/result{imgCounter}.jpg', imgResult)
+        #cv2.imwrite(f'/var/www/html/images/warp{imgCounter}.jpg', imgWarp)
+        firstTime -= 1
+        imgCounter += 1
+        cv2.waitKey(1)
+    ######################### MOTOR
     else:
-        if (curveVal > -0.08):  curveVal = 0
-    
-    str_movimiento = ""
-    
-    if (curveVal == 0):
-        str_movimiento = f"RECTO: {prevCurve} | {curveVal} - move({velocidad}, {curveVal * sen}, {tiempo})"
+        sen = 1.0  # SENSITIVITY
+        #maxVAl = 0.5 # MAX SPEED
+        dutyCicle = 0.45
+        time = 0.3
+
+        #if curveVal > maxVAl: curveVal = maxVAl
+        #if curveVal < -maxVAl: curveVal = -maxVAl
         
-    elif (curveVal < 0):
-        str_movimiento = f"IZQUIERDO: {prevCurve} | {curveVal} - move({velocidad}, {curveVal * sen}, {tiempo})"
-    else:
-        str_movimiento = f"DERECHO: {prevCurve} | {curveVal} - move({velocidad}, {curveVal * sen}, {tiempo})"
-    
-    print(str_movimiento)
-    
-    guardarImg(img, str_movimiento, imgCounter)
-     
-    motor.move(velocidad, curveVal * sen, tiempo)
-    
-    imgCounter += 1
-    
+        if curveVal < 0: #Izquierda
+            if curveVal <= -0.75:
+                print("Error al detectar curva izquierda")
+                motor.stop(5)
+            elif curveVal <= -0.10:
+                sen = 6
+                print("Curva izquierda")
+                #motor.stop(1)
+            elif curveVal <= -0.07:
+                sen = 3
+                print("Alinear izquierda")
+                #motor.stop(0.2)
+            if curveVal > -0.07:
+                curveVal = 0
+        else: # Derecha
+            if curveVal >= 0.75:
+                print("Error al detectar curva derecha")
+                #motor.stop(5)
+            elif curveVal >= 0.10:
+                sen = 6
+                print("Curva derecha")
+                #motor.stop(1)
+            elif curveVal >= 0.07:
+                sen = 3
+                print("Alinear derecha")
+                #motor.stop(0.2)
+            if curveVal < 0.07: curveVal = 0
 
+        if (curveVal > 0):
+            print(f"{imgCounter} DERECHA {dutyCicle}, {-curveVal * sen}, {time}")
+        elif (curveVal < 0):
+            print(f"{imgCounter} IZQUIERDA {dutyCicle}, {-curveVal * sen}, {time}")
+        else:
+            print(f"{imgCounter} RECTO {dutyCicle}, {-curveVal * sen}, {time}")
 
-def moverCarro():
-    if kp.getKey('UP'):
-        motor.move(0.8, 0, 0.1)
-    elif kp.getKey('DOWN'):
-        motor.move(-0.8, 0, 0.1)
-    elif kp.getKey('LEFT'):
-        motor.move(0.8, -0.3, 0.1)
-    elif kp.getKey('RIGHT'):
-        motor.move(0.8, 0.3, 0.1)
-    else:
-        motor.stop(0.1)
-
+        motor.move(dutyCicle, curveVal * sen, time)
+        imgCounter += 1
+        cv2.waitKey(1)
+        motor.stop(0.01)
+    
 if __name__ == '__main__':
-    sleep(7)
     while True:
-        #moverCarro()
-        main() 
-        
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        main()
